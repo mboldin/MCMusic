@@ -1,0 +1,224 @@
+---
+title: "Training_Data_Minor"
+output: pdf_document
+---
+
+Created Dec. 21 2023
+
+The purpose of this file is to collect all notes in the training data and pool it together to create a standard transition matrix in the key of G Minor.  Music will be entered as sequences of MIDI pitches.  ALL SONGS ENTERED MUST BE IN THE KEY OF G MINOR.  The choice of G Minor is made to match the choice of G Major in the major training data file.  This way we can apply the same shift operations to the Markov Chain later.   
+
+```{r}
+library(tidyverse)
+library(markovchain)
+```
+
+
+```{r}
+# Setting Note Parameters
+MaxNote = 89
+MinNote = 53
+```
+
+
+```{r}
+# Entering the notes as MIDI pitches
+#Bach Concerto in G minor BWV 983 Allegro
+Bach3Notes = c(74,70,70,70,69,67,74,62,62,74,70,70,70,69,67,74,62,62,74,79,81,82,81,82,79,78,74,74,74,79,81,82,81,82,79,78,74,74,79,81,82,81,79,79,81,78,79,67,67,79,81,82,81,79,79,81,78,79,67,67,77,74,74,74,72,70,77,65,65,77,74,74,74,72,70,77,65,65,77,74,72,70,70,72,69,70,0,74,70,70,70,69,67,74,62,62,74,70,70,70,69,67,74,62,62,74,79,81,82,81,82,79,78,74,74,74,79,81,82,81,82,79,78,74,74,79,81,82,81,79,79,81,78,79,67,67,74,70,69,67,67,69,66,67)
+B3L = length(Bach3Notes)
+
+
+#Bach Fugue in G Minor Allegro
+Bach4Notes = c(67,74,70,69,67,70,69,67,66,69,62,67,62,69,62,70,69,67,69,62,67,62,67,69,62,69,70,69,67,69,67,69,62,70,69,70,69,67,70,69,70,69,67,70,69,67,66,69,67,62,67,69,70,72,74,76,77,76,74,77,76,74,73,76,74,69,74,76,79,79,77,79,77,79,81,79,81,82,81,79,77,76,77,81,79,81,73,81,79,81,74,81,79,81,73,81,79,81,77,74,73,74,79,74,72,74,81,74,72,74,79,74,72,74,69,77,67,76,65,69,74,77,75,81,75,74,79,74,72,70,72,74,72,81,79,81,70,79,78,79,69,78,76,78,79)
+B4L = length(Bach4Notes)
+
+
+#Brahms Ballade in G Minor Allegro energico
+BB = c(76,78,79,77,75,74,72,74,70,67,72,69,70,67,69,62,76,78,79,77,76,77,75,74,75,72,74,70,72,69,67,65,67,68,70,65,67,68,70,65,70,72,72,67,70,72,72,69,75,74,74,72,72,70,70,68,68,67,70,65,67,68,70,67,72,73,73,68,70,73,73,74,77,75,74,73,74,76,78,79,77,75,74,72,74,70,67,72,69,70,67,69,62,78,79,81,82,81,79,77,79,77,75,72,74,70,72,69,67,66,67,66,67)
+BBL = length(BB)
+
+
+# Mozart K.154 Fugue in G Minor
+Mozart1Notes = c(67,62,63,64,65,66,67,67,74,67,70,71,72,73,74,67,70,72,74,75,69,70,72,74,67,69,70,72,70,69,67,66,67,62,67,70,69,74,66,67,60,72,70,69,62,74,72,70,72,69,74,67,69,70,63,65,62,67,61,67,62,67,67,67)
+M1L = length(Mozart1Notes)
+
+# Trio from Baryton Trio in G Major Hob XI:26 by Haydn
+# G minor section of a Minuet and Trio Pair
+Haydn2Notes = c(79,78,74,75,74,70,72,70,67,70,69,67,66,67,
+                79,78,74,75,74,70,72,70,67,70,69,67,66,67,
+                70,67,71,72,69,73,74,70,74,79,78,74,75,
+                74,70,72,70,67,70,69,67,66,67,
+                70,67,71,72,69,73,74,70,74,79,78,74,75,
+                74,70,72,70,67,70,69,67,66,67)
+H2L = length(Haydn2Notes)
+
+# Trio from Baryton Trio in G Major Hob XI:30 by Haydn
+# G minor section of a Minuet and Trio Pair
+Haydn3Notes = c(67,70,69,72,70,0,70,74,72,76,75,0,74,77,75,79,77,81,
+                82,74,72,70,0,
+                67,70,69,72,70,0,70,74,72,76,75,0,74,77,75,79,77,81,
+                82,74,72,70,0,
+                77,80,79,75,79,77,74,74,75,
+                72,75,74,72,70,79,70,70,69,0,67,70,69,72,70,0,
+                70,74,72,75,74,0,74,78,79,70,69,67,
+                70,69,70,72,74,78,79,70,69,67,0,
+                77,80,79,75,79,77,74,74,75,
+                72,75,74,72,70,79,70,70,69,0,67,70,69,72,70,0,
+                70,74,72,75,74,0,74,78,79,70,69,67,
+                70,69,70,72,74,78,79,70,69,67,0)
+H3L = length(Haydn3Notes)
+
+# Trio from Baryton Trio in G Major Hob XI:37 by Haydn
+# G minor section of a Minuet and Trio Pair
+Haydn4Notes = c(74,75,78,79,0,67,69,70,69,73,74,77,76,74,73,74,0,
+                74,75,78,79,0,67,69,70,69,73,74,77,76,74,73,74,0,
+                77,75,74,73,74,0,67,69,70,69,72,70,70,69,67,66,67,
+                77,75,74,73,74,0,67,69,70,69,72,70,70,69,67,66,67)
+H4L = length(Haydn4Notes)
+
+# Trio from Baryton Trio in G Major Hob XI:55 by Haydn
+# G minor section of a Minuet and Trio Pair
+Haydn5Notes = c(0,79,79,79,78,0,75,75,75,74,0,72,72,72,70,70,69,67,66,67,
+                0,79,79,79,78,0,75,75,75,74,0,72,72,72,70,70,69,67,66,67,
+                0,78,78,79,74,70,69,72,70,69,0,
+                79,79,79,78,75,75,75,74,72,70,67,66,67,
+                0,78,78,79,74,70,69,72,70,69,0,
+                79,79,79,78,75,75,75,74,72,70,67,66,67)
+H5L = length(Haydn5Notes)
+
+
+```
+
+
+
+```{r}
+# This function expands a TPM to have all pitch entries from 0 to a specified maximum note
+# We need this to account for note transitions that are not observed
+FillMatrix <- function(matrix, max.note){
+  # Create a blank matrix of zeros
+  D = matrix(rep(0,times = (max.note+1)^2),nrow = max.note+1,ncol = max.note+1) 
+  numericlabels = seq(0,max.note) # Create numeric labels for the rows of D
+  # Turn the rows to strings so they match row names in input matrix
+  rownames(D) = as.character(numericlabels) 
+  colnames(D) = rownames(D)
+  # Iterate over each matrix entry in the input matrix and add it to D
+  for (row in rownames(matrix)){ 
+    for (col in colnames(matrix)){
+      #print(row,col)
+      if (D[row,col] != matrix[row,col]){
+        D[row,col] = matrix[row,col]
+      }
+    }
+  }
+  return(D)
+}
+
+#Function to Normalize Matrix
+Normalize = function(M){
+  newM = M
+  for (r in rownames(M)){
+    if(sum(M[r,])==0){ 
+      # If row sum is 0, replace row with all states having equal probability
+      # This is the case when we have observed no transitions in our training data for this note
+      newM[r,] = rep(1/length(M[r,]),length(M[r,]))
+    }
+    else{
+      newM[r,] = M[r,]/sum(M[r,])
+    }
+
+  }
+   return(newM)
+}
+
+```
+
+
+```{r}
+# Edit this chunk each time you add new piece to train
+
+# Creating Individual MC for each piece
+Matrix_Bach3 = markovchainFit(data = Bach3Notes, method = "mle")
+Matrix_Bach3 = FillMatrix(Matrix_Bach3$estimate@transitionMatrix,MaxNote) #MaxNote defined Above
+Matrix_Bach3 = Matrix_Bach3[-2:-MinNote,-2:-MinNote]
+Matrix_Bach3 = Normalize(Matrix_Bach3)
+dim(Matrix_Bach3)
+rowSums(Matrix_Bach3) # Check to make sure row sums are 1
+
+Matrix_Bach4 = markovchainFit(data = Bach4Notes, method = "mle")
+Matrix_Bach4 = FillMatrix(Matrix_Bach4$estimate@transitionMatrix,MaxNote)
+Matrix_Bach4 = Matrix_Bach4[-2:-MinNote,-2:-MinNote]
+Matrix_Bach4 = Normalize(Matrix_Bach4)
+dim(Matrix_Bach4)
+rowSums(Matrix_Bach4)
+
+Matrix_Brahms1 = markovchainFit(data = BB, method = "mle")
+Matrix_Brahms1 = FillMatrix(Matrix_Brahms1$estimate@transitionMatrix,MaxNote)
+Matrix_Brahms1= Matrix_Brahms1[-2:-MinNote,-2:-MinNote]
+Matrix_Brahms1 = Normalize(Matrix_Brahms1)
+dim(Matrix_Brahms1)
+rowSums(Matrix_Brahms1)
+
+Matrix_Mozart1 = markovchainFit(data = Mozart1Notes, method = "mle")
+Matrix_Mozart1  = FillMatrix(Matrix_Mozart1$estimate@transitionMatrix,MaxNote)
+Matrix_Mozart1 = Matrix_Mozart1[-2:-MinNote,-2:-MinNote]
+Matrix_Mozart1  = Normalize(Matrix_Mozart1 )
+dim(Matrix_Mozart1 )
+rowSums(Matrix_Mozart1 )
+
+Matrix_Haydn2 = markovchainFit(data = Haydn2Notes, method = "mle")
+Matrix_Haydn2  = FillMatrix(Matrix_Haydn2$estimate@transitionMatrix,MaxNote)
+Matrix_Haydn2 = Matrix_Haydn2[-2:-MinNote,-2:-MinNote]
+Matrix_Haydn2 = Normalize(Matrix_Haydn2 )
+dim(Matrix_Haydn2)
+rowSums(Matrix_Haydn2)
+
+Matrix_Haydn3 = markovchainFit(data = Haydn3Notes, method = "mle")
+Matrix_Haydn3  = FillMatrix(Matrix_Haydn3$estimate@transitionMatrix,MaxNote)
+Matrix_Haydn3 = Matrix_Haydn3[-2:-MinNote,-2:-MinNote]
+Matrix_Haydn3 = Normalize(Matrix_Haydn3 )
+dim(Matrix_Haydn3)
+rowSums(Matrix_Haydn3)
+
+Matrix_Haydn4 = markovchainFit(data = Haydn4Notes, method = "mle")
+Matrix_Haydn4  = FillMatrix(Matrix_Haydn4$estimate@transitionMatrix,MaxNote)
+Matrix_Haydn4 = Matrix_Haydn4[-2:-MinNote,-2:-MinNote]
+Matrix_Haydn4 = Normalize(Matrix_Haydn4 )
+dim(Matrix_Haydn4)
+rowSums(Matrix_Haydn4)
+
+Matrix_Haydn5 = markovchainFit(data = Haydn5Notes, method = "mle")
+Matrix_Haydn5  = FillMatrix(Matrix_Haydn5$estimate@transitionMatrix,MaxNote)
+Matrix_Haydn5 = Matrix_Haydn5[-2:-MinNote,-2:-MinNote]
+Matrix_Haydn5 = Normalize(Matrix_Haydn5 )
+dim(Matrix_Haydn5)
+rowSums(Matrix_Haydn5)
+
+```
+
+# Generating Standard Transition Matrix in G Minor
+
+```{r}
+#Create Standard Matrix in G Minor
+
+# Update first 2 lines each time new song added to train data
+# Make sure lengths are listed in same order as matrices
+lengths = c(B3L,B4L,BBL,M1L,H2L,H3L,H4L,H5L)
+Train = list(Matrix_Bach3,Matrix_Bach4,Matrix_Brahms1,Matrix_Mozart1,Matrix_Haydn2,
+             Matrix_Haydn3,Matrix_Haydn4,Matrix_Haydn5)
+
+D = MaxNote-MinNote+2
+S = sum(lengths)
+i = 1 # Counter variable
+G.Minor = matrix(rep(0,times = D),nrow = D,ncol = D) # Create a blank matrix of zeros
+for(MC in Train){
+  t = ((lengths[i]/S)*MC) # We weight each MC by the total number of notes each piece contributes
+  G.Minor = G.Minor + t
+  i = i+1
+}
+G.Minor = Normalize(G.Minor)
+dim(G.Minor)
+rowSums(G.Minor)
+
+
+# Writing standard G minor matrix to csv file
+write.csv(G.Minor,"G.Minor.csv")
+```
