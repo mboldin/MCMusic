@@ -1,0 +1,431 @@
+---
+title: "Training Data for Major Keys"
+output: pdf_document
+---
+
+Created Dec. 19 2023
+
+The purpose of this file is to collect all notes in the training data and pool it together to create a standard transition matrix in the key of G Major.  Music will be entered as sequences of MIDI pitches.  ALL SONGS ENTERED MUST BE IN THE KEY OF G MAJOR.  The choice of G Major is arbitrary.  
+
+```{r}
+library(tidyverse)
+library(markovchain)
+```
+
+
+```{r}
+# Setting Note Parameters
+MaxNote = 89
+MinNote = 53
+```
+
+
+```{r}
+# Entering the notes as MIDI pitches
+# Use state 0 for rest
+# Enter melody lines only
+# Use notes between MaxNote and MinNote inclusive
+# Note some pieces are not included in entirety because song left the key of G 
+
+# From Brandenburg Concerto No 3 in G.  BWV 1048 by J.S. Bach (Vln I Part first few bars)
+Bach1Notes = c(67,66,67,62,60,62,67,66,67,59,57,59,67,66,67,
+               55,57,59,61,62,61,62,64,62,66,62,67,
+               62,61,62,64,62,69,62,71,62,61,62,64,62,72,62,74,
+               71,69,67,69,67,66,67,66,64,62,67,62,67,
+               64,62,60,59,67,59,67,60,59,57,55,67,57,67,
+               59,67,61,67,62,66,62,67,62,69,62,71,62,74,
+               71,69,67,62,66,67,66,67,66,64,62,60,59,57,
+               59,57,55,62,62,55,0)
+B1L = length(Bach1Notes)
+#-------------------------------------------------------------------------------------------------------------------
+
+# From Jesu, meine Freude BWV 227 (G major) by J.S. Bach (melody first few bars)
+Bach2Notes = c(0,67,69,71,74,72,72,76,74,74,79,78,79,74,71,67,69,
+               71,72,74,76,74,72,71,69,71,67,66,67,69,62,66,69,72,
+               71,69,71,67,69,71,74,72,72,76,74,74,79,78,79,74,71,
+               67,69,71,64,74,72,71,69,67,62,67,66,67,71,74,79,74,
+               71,67,71,74,71,72,74,74,72,71,69,69,0,71,72,74,71,69,
+               71,72,71,69,67,0)
+B2L= length(Bach2Notes)
+#-------------------------------------------------------------------------------------------------------------------
+
+#Happy Birthday (G major)
+HBNotesG = c(62,62,64,62,67,66,62,62,64,62,69,67,62,62
+             ,74,71,67,66,64,72,72,71,67,69,67)
+HBL = length(HBNotesG)
+
+#-------------------------------------------------------------------------------------------------------------------
+
+#Yankee Doodle (G major)
+YDNotesG = c(67,67,69,71,67,71,69,62,67,67,69,71,67,66,67,
+             67,69,71,72,71,69,67,66,62,64,66,67,67,64,66,
+             64,62,64,66,67,62,64,62,60,59,62,64,66,64,62,
+             64,66,67,64,62,67,66,69,67,67)
+YDL = length(YDNotesG)
+
+#-------------------------------------------------------------------------------------------------------------------
+
+#Menuetto from Baryton Trio in G Major Hob.XI:26 J. Haydn
+Haydn1Notes = c(67,67,66,67,69,71,67,74,71,67,62,71,67,79,
+                78,79,81,78,79,69,71,72,69,71,72,74,72,71,71,69,
+                67,67,66,67,69,71,67,74,71,67,62,71,67,79,
+                78,79,81,78,79,69,71,72,69,71,72,74,72,71,71,69,
+                74,78,76,78,79,81,72,71,72,74,76,78,79,81,72,
+                72,71,69,67,71,73,74,74,72,71,69,67,71,73,74,0,
+                67,67,66,67,69,71,67,74,71,67,62,71,67,79,
+                78,79,81,78,79,69,71,72,69,71,71,69,67,66,67,0,
+                74,78,76,78,79,81,72,71,72,74,76,78,79,81,72,
+                72,71,69,67,71,73,74,74,72,71,69,67,71,73,74,0,
+                67,67,66,67,69,71,67,74,71,67,62,71,67,79,
+                78,79,81,78,79,69,71,72,69,71,71,69,67,66,67,0)
+H1L = length(Haydn1Notes)
+#-------------------------------------------------------------------------------------------------------------------
+
+# Allegro from Piano Sonatina in G Major Op. 36 No. 2 by M. Clementi (first few bars)
+Clementi1Notes = c(67,67,67,69,74,72,71,67,69,71,67,69,0,
+                   79,79,79,81,79,78,76,74,72,71,67,69,71,67,69,0,
+                   64,66,68,69,71,72,74,76,76,0,62,64,66,67,69,
+                   71,72,74,74,72,62,71,62,69,62,71,62,69,62,67,62,
+                   66,64,62,64,66,67,69,71,74,72,71,69,67,67,67,
+                   69,74,72,71,67,69,71,67,69,0,
+                   64,66,68,69,71,72,74,76,76,0,62,64,66,67,69,
+                   71,72,74,76,78,79,78,76,74,72,71,69,67,71,69,67,0)
+C1L = length(Clementi1Notes)
+#-------------------------------------------------------------------------------------------------------------------
+
+# Un poco adagio from Piano Sonatina in C Major Op. 36 No. 2 by M. Clementi
+# Note this is a G MAJOR movement contained in a C Major work
+Clementi2Notes = c(67,66,67,69,71,69,67,74,76,74,72,71,72,74,0,
+                   79,78,79,78,79,78,79,81,83,81,79,78,76,74,72,71,
+                   69,67,66,67,71,69,0,
+                   67,66,67,69,71,69,67,74,76,74,72,71,72,74,0,
+                   79,78,79,78,79,78,79,81,83,81,79,78,76,74,72,71,
+                   69,67,66,67,71,69,0,
+                   72,74,72,71,69,71,72,73,74,76,74,
+                   72,71,72,74,0,79,78,79,81,83,84,86,84,83,81,79,78,76,
+                   74,72,71,71,69,67,69,71,69,67,0,
+                   72,74,72,71,69,71,72,73,74,76,74,
+                   72,71,72,74,0,79,78,79,81,83,84,86,84,83,81,79,78,76,
+                   74,72,71,71,69,67,69,71,69,67,0)
+C2L = length(Clementi2Notes)
+#-------------------------------------------------------------------------------------------------------------------
+
+# Marche Sortie from 7 Pieces for Organ by Th. Dubois (first few bars)
+Dubois1Notes = c(74,71,67,69,71,72,71,72,74,0,
+            76,78,79,78,76,74,76,78,79,78,76,74,76,71,69,67,71,69,0,
+            76,72,69,71,72,74,72,74,76,0,
+            76,78,81,79,78,76,74,76,79,78,76,74,67,72,69,71,67,0,
+            69,71,73,74,67,66,64,66,67,66,67,69,74,
+            71,73,71,69,64,66,67,69,71,69,71,73,76,74,
+            62,64,62,64,66,71,69,61,64,62,
+            74,71,67,69,71,72,71,72,74,0,
+            76,78,79,78,76,74,76,78,79,78,76,74,76,71,69,67,71,69,0,
+            76,72,69,71,72,74,72,74,76,0,
+            76,78,81,79,78,76,74,76,79,78,76,74,67,72,69,71,67,0)
+D1L = length(Dubois1Notes)
+#-------------------------------------------------------------------------------------------------------------------
+
+# Gelartheit from Volkslieder Op. 64 No. 4 by C.M. von Weber
+CMW1Notes = c(74,71,67,67,69,71,72,74,76,72,69,72,66,69,62,74,
+              71,73,71,69,71,73,74,66,67,69,69,62,72,69,
+              66,69,62,64,66,67,67,74,71,68,71,64,
+              69,69,69,69,72,71,69,67,66,71,74,69,69,
+              71,69,67,69,71,74,67,76,76,74,72,71,69,67,67,0,
+              74,71,67,67,69,71,72,74,76,72,69,72,66,69,62,74,
+              71,73,71,69,71,73,74,66,67,69,69,62,72,69,
+              66,69,62,64,66,67,67,74,71,68,71,64,
+              69,69,69,69,72,71,69,67,66,71,74,69,69,
+              71,69,67,69,71,74,67,76,76,74,72,71,69,67,67,0)
+CMW1L = length(CMW1Notes)
+#-------------------------------------------------------------------------------------------------------------------
+# Winternacht 5 Lieder Op. 15 No. 2 by Richard Strauss
+# 2nd half is in G Major, only 2nd half appears here
+Strauss1Notes = c(71,71,71,76,74,71,67,67,0,76,69,69,72,71,69,71,
+                  69,0,74,74,74,74,74,74,72,71,74,72,69,67,71,69,
+                  67,67,67,67,66,66,0,71,71,71,78,76,74,
+                  72,71,69,76,75,0,74,73,69,67,0,
+                  64,66,71,67,62,0)
+S1L = length(Strauss1Notes)
+#-------------------------------------------------------------------------------------------------------------------
+
+# 6. Cancion from Siete cancions populares espanolas by M. de Falla
+Spanish1Notes = c(74,74,72,71,69,74,74,76,74,72,71,69,74,74,72,71,69,
+                  74,74,0,76,74,72,71,69,
+                  72,72,71,69,67,66,62,0,64,66,67,
+                  72,72,71,69,67,66,62,0,64,66,67,
+                  74,74,72,71,69,74,74,76,74,72,71,69,74,74,72,71,69,
+                  74,74,0,76,74,72,71,69,
+                  72,72,71,69,67,66,62,0,64,66,67,
+                  72,72,71,69,67,66,62,0,64,66,67)
+Spanish1L = length(Spanish1Notes)
+#-------------------------------------------------------------------------------------------------------------------
+
+# 1. Galante from Danzas Espanolas by E. Granados
+Spanish2Notes = c(0,83,81,83,84,84,84,84,62,83,81,83,84,84,84,83,86,84,83,81,0,81,
+                  0,83,84,0,83,71,72,74,71,72,74,71,72,74,74,76,78,79,
+                  0,83,81,83,84,84,84,84,62,83,81,83,84,84,84,83,86,84,83,81,0,81,
+                  0,83,84,86,86,79,81,
+                  71,72,74,71,72,74,71,72,74,76,78,79,81,79,78,79,79)
+Spanish2L = length(Spanish2Notes)
+#-------------------------------------------------------------------------------------------------------------------
+
+# 4. Villanesca from Danzas Espanolas by E. Granados
+Spanish3Notes = c(62,86,62,86,62,86,62,86,62,67,67,67,69,71,72,72,71,69,71,
+                  67,64,69,69,69,71,72,74,74,72,71,72,69,67,
+                  66,66,67,66,62,64,66,67,86,
+                  62,67,67,67,69,71,72,72,71,69,71,67,64,69,69,
+                  69,71,72,74,74,72,71,72,69,67,72,72,
+                  72,74,76,78,78,76,74,74,72,74,79,79,79,81,83,84,
+                  84,83,81,83,79,62,67,67,67,69,71,72,72,71,69,71,
+                  67,64,69,69,69,71,72,74,74,72,71,72,69,67,
+                  72,72,72,74,76,78,78,76,74,76,72,74,
+                  79,79,79,81,83,84,84,83,81,83,79,
+                  62,59,60,62,74,72,71,72,69,62,59,60,62,74,71,69,71,67,
+                  62,59,60,62,74,72,71,72,69,62,59,60,62,74,71,69,71,67,
+                  71,69,67,67,62,79,62,79,79,78,76,74,72,71,69,67,
+                  86,67,86,67,86,67,86,
+                  62,86,62,86,62,86,62,86,62,67,67,67,69,71,72,72,71,69,71,
+                  67,64,69,69,69,71,72,74,74,72,71,72,69,67,
+                  66,66,67,66,62,64,66,67,86,
+                  62,67,67,67,69,71,72,72,71,69,71,67,64,69,69,
+                  69,71,72,74,74,72,71,72,69,67,72,72,
+                  72,74,76,78,78,76,74,74,72,74,79,79,79,81,83,84,
+                  84,83,81,83,79,62,67,67,67,69,71,72,72,71,69,71,
+                  67,64,69,69,69,71,72,74,74,72,71,72,69,67,
+                  72,72,72,74,76,78,78,76,74,76,72,74,
+                  79,79,79,81,83,84,84,83,81,83,79,
+                  62,59,60,62,74,72,71,72,69,62,59,60,62,74,71,69,71,67,
+                  62,59,60,62,74,72,71,72,69,62,59,60,62,74,71,69,71,67,
+                  71,69,67,67,62,79,62,79,79,78,76,74,72,71,69,67)
+Spanish3L = length(Spanish3Notes)
+#-------------------------------------------------------------------------------------------------------------------
+
+# Prelude and Fugue in G Major by Johann Kuhnau
+KuhNotes1 = c(71,74,72,71,69,74,76,78,79,81,78,79,81,
+              79,78,76,78,79,81,78,79,78,76,74,74,72,72,
+              71,69,71,72,71,69,74,71,0,
+              62,62,64,69,62,67,66,64,62,64,62,64,66,
+              67,66,64,66,64,62,64,66,67,69,66,67,67,69,74,
+              67,72,71,69,67,69,67,67,69,71,72,74,71,72,74,72,
+              69,71,73,74,73,74,72,74,71,72,71,69,71,69,67,66,67,66,67,69,71,72,69,
+              0,74,74,76,81,74,79,78,76,74,72,74,72,71,72,74,76,74,73,74,73,74,
+              71,69,67,66,67,66,67,69,71,72,67,72,71,69,71)
+Kuh1L = length(KuhNotes1)
+#-------------------------------------------------------------------------------------------------------------------
+
+# Hymn Tune Arise my soul, arise.  Written by Lewis Edson
+Hymn1Notes = c(67,67,67,62,64,62,62,67,69,71,69,67,67,
+               71,74,71,67,68,69,71,67,69,66,67,
+               62,67,67,67,62,64,64,64,67,69,69,69,71,
+               67,67,67,62,64,64,64,67,69,66,67,
+               67,67,67,62,64,62,62,67,69,71,69,67,67,
+               71,74,71,67,68,69,71,67,69,66,67,
+               62,67,67,67,62,64,64,64,67,69,69,69,71,
+               67,67,67,62,64,64,64,67,69,66,67)
+H1L = length(Hymn1Notes)
+
+
+```
+
+
+```{r}
+# This function expands a TPM to have all pitch entries from 0 to a specified maximum note
+# We need this to account for note transitions that are not observed
+FillMatrix <- function(matrix, max.note){
+  # Create a blank matrix of zeros
+  D = matrix(rep(0,times = (max.note+1)^2),nrow = max.note+1,ncol = max.note+1) 
+  numericlabels = seq(0,max.note) # Create numeric labels for the rows of D
+  # Turn the rows to strings so they match row names in input matrix
+  rownames(D) = as.character(numericlabels) 
+  colnames(D) = rownames(D)
+  # Iterate over each matrix entry in the input matrix and add it to D
+  for (row in rownames(matrix)){ 
+    for (col in colnames(matrix)){
+      #print(row,col)
+      if (D[row,col] != matrix[row,col]){
+        D[row,col] = matrix[row,col]
+      }
+    }
+  }
+  return(D)
+}
+
+#Function to Normalize Matrix
+Normalize = function(M){
+  newM = M
+  for (r in rownames(M)){
+    if(sum(M[r,])==0){ 
+      # If row sum is 0, replace row with all states having equal probability
+      # This is the case when we have observed no transitions in our training data for this note
+      newM[r,] = rep(1/length(M[r,]),length(M[r,]))
+    }
+    else{
+      newM[r,] = M[r,]/sum(M[r,])
+    }
+
+  }
+   return(newM)
+}
+
+```
+
+
+```{r}
+# Edit this chunk each time you add new piece to train
+
+# Creating Individual MC for each piece
+Matrix_Bach1 = markovchainFit(data = Bach1Notes, method = "mle")
+Matrix_Bach1 = FillMatrix(Matrix_Bach1$estimate@transitionMatrix,MaxNote) #MaxNote defined Above
+Matrix_Bach1 = Matrix_Bach1[-2:-MinNote,-2:-MinNote]
+Matrix_Bach1 = Normalize(Matrix_Bach1)
+dim(Matrix_Bach1)
+rowSums(Matrix_Bach1) # Check to make sure row sums are 1
+
+Matrix_Bach2 = markovchainFit(data = Bach2Notes, method = "mle")
+Matrix_Bach2 = FillMatrix(Matrix_Bach2$estimate@transitionMatrix,MaxNote) #MaxNote defined Above
+Matrix_Bach2 = Matrix_Bach2[-2:-MinNote,-2:-MinNote]
+Matrix_Bach2 = Normalize(Matrix_Bach2)
+dim(Matrix_Bach2)
+rowSums(Matrix_Bach2) # Check to make sure row sums are 1
+
+Matrix_HB = markovchainFit(data = HBNotesG, method = "mle")
+Matrix_HB = FillMatrix(Matrix_HB$estimate@transitionMatrix,MaxNote) #MaxNote defined Above
+Matrix_HB = Matrix_HB[-2:-MinNote,-2:-MinNote]
+Matrix_HB = Normalize(Matrix_HB)
+dim(Matrix_HB)
+rowSums(Matrix_HB) # Check to make sure row sums are 1
+
+Matrix_YD = markovchainFit(data = YDNotesG, method = "mle")
+Matrix_YD = FillMatrix(Matrix_YD$estimate@transitionMatrix,MaxNote) #MaxNote defined Above
+Matrix_YD = Matrix_YD[-2:-MinNote,-2:-MinNote]
+Matrix_YD = Normalize(Matrix_YD)
+dim(Matrix_YD)
+rowSums(Matrix_YD) # Check to make sure row sums are 1
+
+Matrix_Haydn1 = markovchainFit(data = Haydn1Notes, method = "mle")
+Matrix_Haydn1 = FillMatrix(Matrix_Haydn1$estimate@transitionMatrix,MaxNote)
+Matrix_Haydn1 = Matrix_Haydn1[-2:-MinNote,-2:-MinNote]
+Matrix_Haydn1 = Normalize(Matrix_Haydn1)
+dim(Matrix_Haydn1)
+rowSums(Matrix_Haydn1)
+
+Matrix_Clementi1 = markovchainFit(data = Clementi1Notes, method = "mle")
+Matrix_Clementi1 = FillMatrix(Matrix_Clementi1$estimate@transitionMatrix,MaxNote)
+Matrix_Clementi1 = Matrix_Clementi1[-2:-MinNote,-2:-MinNote]
+Matrix_Clementi1 = Normalize(Matrix_Clementi1)
+dim(Matrix_Clementi1)
+rowSums(Matrix_Clementi1)
+
+Matrix_Clementi2 = markovchainFit(data = Clementi2Notes, method = "mle")
+Matrix_Clementi2 = FillMatrix(Matrix_Clementi2$estimate@transitionMatrix,MaxNote)
+Matrix_Clementi2 = Matrix_Clementi2[-2:-MinNote,-2:-MinNote]
+Matrix_Clementi2 = Normalize(Matrix_Clementi2)
+dim(Matrix_Clementi2)
+rowSums(Matrix_Clementi2)
+
+Matrix_Dubois1 = markovchainFit(data = Dubois1Notes, method = "mle")
+Matrix_Dubois1 = FillMatrix(Matrix_Dubois1$estimate@transitionMatrix,MaxNote)
+Matrix_Dubois1 = Matrix_Dubois1[-2:-MinNote,-2:-MinNote]
+Matrix_Dubois1 = Normalize(Matrix_Dubois1)
+dim(Matrix_Dubois1)
+rowSums(Matrix_Dubois1)
+
+
+
+```
+
+
+```{r}
+# More training data
+# Made this chunk to reduce size of previous chunk
+
+Matrix_CMW1 = markovchainFit(data = CMW1Notes, method = "mle")
+Matrix_CMW1 = FillMatrix(Matrix_CMW1$estimate@transitionMatrix,MaxNote)
+Matrix_CMW1 = Matrix_CMW1[-2:-MinNote,-2:-MinNote]
+Matrix_CMW1 = Normalize(Matrix_CMW1)
+dim(Matrix_CMW1)
+rowSums(Matrix_CMW1)
+
+Matrix_S1 = markovchainFit(data = Strauss1Notes, method = "mle")
+Matrix_S1 = FillMatrix(Matrix_S1$estimate@transitionMatrix,MaxNote)
+Matrix_S1 = Matrix_S1[-2:-MinNote,-2:-MinNote]
+Matrix_S1 = Normalize(Matrix_S1)
+dim(Matrix_S1)
+rowSums(Matrix_S1)
+
+Matrix_Spanish1 = markovchainFit(data = Spanish1Notes, method = "mle")
+Matrix_Spanish1 = FillMatrix(Matrix_Spanish1$estimate@transitionMatrix,MaxNote)
+Matrix_Spanish1 = Matrix_Spanish1[-2:-MinNote,-2:-MinNote]
+Matrix_Spanish1 = Normalize(Matrix_Spanish1)
+dim(Matrix_Spanish1)
+rowSums(Matrix_Spanish1)
+
+Matrix_Spanish2 = markovchainFit(data = Spanish2Notes, method = "mle")
+Matrix_Spanish2 = FillMatrix(Matrix_Spanish2$estimate@transitionMatrix,MaxNote)
+Matrix_Spanish2 = Matrix_Spanish2[-2:-MinNote,-2:-MinNote]
+Matrix_Spanish2 = Normalize(Matrix_Spanish2)
+dim(Matrix_Spanish2)
+rowSums(Matrix_Spanish2)
+
+Matrix_Spanish3 = markovchainFit(data = Spanish3Notes, method = "mle")
+Matrix_Spanish3 = FillMatrix(Matrix_Spanish3$estimate@transitionMatrix,MaxNote)
+Matrix_Spanish3 = Matrix_Spanish3[-2:-MinNote,-2:-MinNote]
+Matrix_Spanish3 = Normalize(Matrix_Spanish3)
+dim(Matrix_Spanish3)
+rowSums(Matrix_Spanish3)
+
+Matrix_Kuhnau1 = markovchainFit(data = KuhNotes1, method = "mle")
+Matrix_Kuhnau1 = FillMatrix(Matrix_Kuhnau1$estimate@transitionMatrix,MaxNote)
+Matrix_Kuhnau1 = Matrix_Kuhnau1[-2:-MinNote,-2:-MinNote]
+Matrix_Kuhnau1 = Normalize(Matrix_Kuhnau1)
+dim(Matrix_Kuhnau1)
+rowSums(Matrix_Kuhnau1)
+
+Matrix_Hymn1 = markovchainFit(data = Hymn1Notes, method = "mle")
+Matrix_Hymn1 = FillMatrix(Matrix_Hymn1$estimate@transitionMatrix,MaxNote)
+Matrix_Hymn1 = Matrix_Hymn1[-2:-MinNote,-2:-MinNote]
+Matrix_Hymn1 = Normalize(Matrix_Hymn1)
+dim(Matrix_Hymn1)
+rowSums(Matrix_Hymn1)
+
+
+
+
+
+```
+
+
+# Generating Standard Transition Matrix in G Major
+
+```{r}
+#Create Standard Matrix in G Major
+
+# Update first 2 lines each time new song added to train data
+# Make sure lengths are listed in same order as matrices
+lengths = c(B1L,B2L,HBL,YDL,H1L,C1L,C2L,D1L,CMW1L,S1L,Spanish1L,Spanish2L,Spanish3L,Kuh1L,H1L)
+Train = list(Matrix_Bach1,Matrix_Bach2,Matrix_HB,Matrix_YD,Matrix_Haydn1,
+             Matrix_Clementi1,Matrix_Clementi2,Matrix_Dubois1,Matrix_CMW1,
+             Matrix_S1,Matrix_Spanish1,Matrix_Spanish2,Matrix_Spanish3,Matrix_Kuhnau1,
+             Matrix_Hymn1)
+
+D = MaxNote-MinNote+2
+S = sum(lengths)
+i = 1 # Counter variable
+G.Major = matrix(rep(0,times = D),nrow = D,ncol = D) # Create a blank matrix of zeros
+for(MC in Train){
+  t = ((lengths[i]/S)*MC) # We weight each MC by the total number of notes each piece contributes
+  G.Major = G.Major + t
+  i = i+1
+}
+G.Major = Normalize(G.Major)
+dim(G.Major)
+rowSums(G.Major)
+
+
+# Writing standard G major matrix to csv file
+write.csv(G.Major,"G.Major.csv")
+```
+
+
+
+
