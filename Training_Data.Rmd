@@ -10,6 +10,7 @@ The purpose of this file is to collect all notes in the training data and pool i
 ```{r}
 library(tidyverse)
 library(markovchain)
+source('SourceCode.R')
 ```
 
 
@@ -49,21 +50,7 @@ Bach2Notes = c(0,67,69,71,74,72,72,76,74,74,79,78,79,74,71,67,69,
 B2L= length(Bach2Notes)
 #-------------------------------------------------------------------------------------------------------------------
 
-#Happy Birthday (G major)
-HBNotesG = c(62,62,64,62,67,66,62,62,64,62,69,67,62,62
-             ,74,71,67,66,64,72,72,71,67,69,67)
-HBL = length(HBNotesG)
 
-#-------------------------------------------------------------------------------------------------------------------
-
-#Yankee Doodle (G major)
-YDNotesG = c(67,67,69,71,67,71,69,62,67,67,69,71,67,66,67,
-             67,69,71,72,71,69,67,66,62,64,66,67,67,64,66,
-             64,62,64,66,67,62,64,62,60,59,62,64,66,64,62,
-             64,66,67,64,62,67,66,69,67,67)
-YDL = length(YDNotesG)
-
-#-------------------------------------------------------------------------------------------------------------------
 
 #Menuetto from Baryton Trio in G Major Hob.XI:26 J. Haydn
 Haydn1Notes = c(67,67,66,67,69,71,67,74,71,67,62,71,67,79,
@@ -228,47 +215,6 @@ H1L = length(Hymn1Notes)
 ```
 
 
-```{r}
-# This function expands a TPM to have all pitch entries from 0 to a specified maximum note
-# We need this to account for note transitions that are not observed
-FillMatrix <- function(matrix, max.note){
-  # Create a blank matrix of zeros
-  D = matrix(rep(0,times = (max.note+1)^2),nrow = max.note+1,ncol = max.note+1) 
-  numericlabels = seq(0,max.note) # Create numeric labels for the rows of D
-  # Turn the rows to strings so they match row names in input matrix
-  rownames(D) = as.character(numericlabels) 
-  colnames(D) = rownames(D)
-  # Iterate over each matrix entry in the input matrix and add it to D
-  for (row in rownames(matrix)){ 
-    for (col in colnames(matrix)){
-      #print(row,col)
-      if (D[row,col] != matrix[row,col]){
-        D[row,col] = matrix[row,col]
-      }
-    }
-  }
-  return(D)
-}
-
-#Function to Normalize Matrix
-Normalize = function(M){
-  newM = M
-  for (r in rownames(M)){
-    if(sum(M[r,])==0){ 
-      # If row sum is 0, replace row with all states having equal probability
-      # This is the case when we have observed no transitions in our training data for this note
-      newM[r,] = rep(1/length(M[r,]),length(M[r,]))
-    }
-    else{
-      newM[r,] = M[r,]/sum(M[r,])
-    }
-
-  }
-   return(newM)
-}
-
-```
-
 
 ```{r}
 # Edit this chunk each time you add new piece to train
@@ -288,19 +234,6 @@ Matrix_Bach2 = Normalize(Matrix_Bach2)
 dim(Matrix_Bach2)
 rowSums(Matrix_Bach2) # Check to make sure row sums are 1
 
-Matrix_HB = markovchainFit(data = HBNotesG, method = "mle")
-Matrix_HB = FillMatrix(Matrix_HB$estimate@transitionMatrix,MaxNote) #MaxNote defined Above
-Matrix_HB = Matrix_HB[-2:-MinNote,-2:-MinNote]
-Matrix_HB = Normalize(Matrix_HB)
-dim(Matrix_HB)
-rowSums(Matrix_HB) # Check to make sure row sums are 1
-
-Matrix_YD = markovchainFit(data = YDNotesG, method = "mle")
-Matrix_YD = FillMatrix(Matrix_YD$estimate@transitionMatrix,MaxNote) #MaxNote defined Above
-Matrix_YD = Matrix_YD[-2:-MinNote,-2:-MinNote]
-Matrix_YD = Normalize(Matrix_YD)
-dim(Matrix_YD)
-rowSums(Matrix_YD) # Check to make sure row sums are 1
 
 Matrix_Haydn1 = markovchainFit(data = Haydn1Notes, method = "mle")
 Matrix_Haydn1 = FillMatrix(Matrix_Haydn1$estimate@transitionMatrix,MaxNote)
@@ -402,8 +335,8 @@ rowSums(Matrix_Hymn1)
 
 # Update first 2 lines each time new song added to train data
 # Make sure lengths are listed in same order as matrices
-lengths = c(B1L,B2L,HBL,YDL,H1L,C1L,C2L,D1L,CMW1L,S1L,Spanish1L,Spanish2L,Spanish3L,Kuh1L,H1L)
-Train = list(Matrix_Bach1,Matrix_Bach2,Matrix_HB,Matrix_YD,Matrix_Haydn1,
+lengths = c(B1L,B2L,H1L,C1L,C2L,D1L,CMW1L,S1L,Spanish1L,Spanish2L,Spanish3L,Kuh1L,H1L)
+Train = list(Matrix_Bach1,Matrix_Bach2,Matrix_Haydn1,
              Matrix_Clementi1,Matrix_Clementi2,Matrix_Dubois1,Matrix_CMW1,
              Matrix_S1,Matrix_Spanish1,Matrix_Spanish2,Matrix_Spanish3,Matrix_Kuhnau1,
              Matrix_Hymn1)
