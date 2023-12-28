@@ -1,0 +1,113 @@
+---
+title: "Simple Neural Network"
+output: pdf_document
+---
+
+This file creates a simple feed-forward neural network to test the key signature of pieces using the proportions of each pitch class in the song.  
+
+```{r}
+library(tidyverse)
+library(neuralnet)
+
+source('NNSourceFile.R')
+```
+
+# Train Data
+```{r}
+# From Brandenburg Concerto No 3 in G.  BWV 1048 by J.S. Bach (Vln I Part first few bars)
+Bach1Notes = c(67,66,67,62,60,62,67,66,67,59,57,59,67,66,67,
+               55,57,59,61,62,61,62,64,62,66,62,67,
+               62,61,62,64,62,69,62,71,62,61,62,64,62,72,62,74,
+               71,69,67,69,67,66,67,66,64,62,67,62,67,
+               64,62,60,59,67,59,67,60,59,57,55,67,57,67,
+               59,67,61,67,62,66,62,67,62,69,62,71,62,74,
+               71,69,67,62,66,67,66,67,66,64,62,60,59,57,
+               59,57,55,62,62,55,0)
+
+# From Jesu, meine Freude BWV 227 (G major) by J.S. Bach (melody first few bars)
+Bach2Notes = c(0,67,69,71,74,72,72,76,74,74,79,78,79,74,71,67,69,
+               71,72,74,76,74,72,71,69,71,67,66,67,69,62,66,69,72,
+               71,69,71,67,69,71,74,72,72,76,74,74,79,78,79,74,71,
+               67,69,71,64,74,72,71,69,67,62,67,66,67,71,74,79,74,
+               71,67,71,74,71,72,74,74,72,71,69,69,0,71,72,74,71,69,
+               71,72,71,69,67,0)
+
+
+```
+
+```{r}
+t1 = transpose.Song(Bach1Notes)
+t2 = transpose.Song(Bach2Notes)
+Train = rbind(t1,t2)
+Train = data.frame(Train)
+Train[, c(2:13)] <- sapply(Train[, c(2:13)], as.numeric)
+Train #This is a data frame organized by key and proportion of notes in that key
+```
+
+# Test Data
+```{r}
+# America The Beautiful (in Bb Major)
+ATBNotes = c(65,65,62,62,65,65,60,60,62,64,65,67,69,65,65,65,62,62,65,65,60,60,72,71,72,74,67,72,65,74,74,72,70,70,69,69,70,72,69,67,65,70,70,70,67,67,70,70,65,65,65,67,70,65,72,70)
+
+
+#Happy Birthday (G major)
+HBNotesG = c(62,62,64,62,67,66,62,62,64,62,69,67,62,62
+             ,74,71,67,66,64,72,72,71,67,69,67)
+
+#Yankee Doodle (G major)
+YDNotesG = c(67,67,69,71,67,71,69,62,67,67,69,71,67,66,67,
+             67,69,71,72,71,69,67,66,62,64,66,67,67,64,66,
+             64,62,64,66,67,62,64,62,60,59,62,64,66,64,62,
+             64,66,67,64,62,67,66,69,67,67)
+```
+
+
+```{r}
+# Function to Add Notes to Test Data
+addtoTest = function(Notes,ActualKey){
+  l = Notes[which(Notes !=0)]
+  L = label.Notes(l)
+  G = group.Notes(L)
+  G = round(G,digits=3)
+  percent.list = c(ActualKey, G)
+  M = matrix(percent.list,nrow = 1,ncol = 13,byrow = T)
+  names = c('Abcount', 'ANcount', 'Bbcount', 'BNcount', 'CNcount', 'Dbcount', 'DNcount', 'Ebcount','ENcount', 'FNcount', 'FScount' )
+  colnames = c('Key','GNcount',names)
+  colnames(M) = colnames
+  return(M)
+  
+}
+```
+
+```{r}
+s1 = addtoTest(ATBNotes,"Bb")
+s2 = addtoTest(HBNotesG,"GN")
+s3 = addtoTest(YDNotesG,"GN")
+
+Test = rbind(s1,s2,s3)
+Test = data.frame(Test)
+Test[, c(2:13)] <- sapply(Test[, c(2:13)], as.numeric)
+Test #This is a data frame organized by key and proportion of notes in that key
+```
+
+
+# Set Up single Layer Neural Network and Print Confusion Matrix
+```{r}
+Train_orig = Train[1:13]
+Test_orig = Test[1:13]
+Train_orig %>% mutate_if(is.character, as.factor)
+Test_orig %>% mutate_if(is.character, as.factor)
+model2 = neuralnet(Key~GNcount+Abcount+ANcount+Bbcount+BNcount +CNcount+Dbcount+DNcount+Ebcount+ENcount+FNcount+ FScount , data=Train_orig, hidden=c(12),act.fct = "logistic", linear.output = FALSE)
+
+plot(model2,rep = "best")
+pred <- predict(model2, Test_orig[2:13])
+labels <- c('Ab', 'AN', 'Bb', 'BN', 'CN', 'Db', 'DN', 'Eb','EN', 'FN','FS','GN' ) 
+# Labels list needs to be alphabetized
+prediction_label <- data.frame(max.col(pred)) %>% mutate(pred=labels[max.col.pred.]) %>% select(2) %>% unlist()
+
+table(Test_orig$Key, prediction_label)
+check = prediction_label == Test_orig$Key
+accuracy = (sum(check)/nrow(Test_orig))*100
+paste("Accuracy Rate for Neural Network is ",round(accuracy,3),"%")
+```
+
